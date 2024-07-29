@@ -26,13 +26,12 @@ pub fn build_tracer() -> TraceResult<Tracer> {
         .unwrap_or(8126);
 
     // disabling connection reuse with dd-agent to avoid "connection closed from server" errors
-    let dd_http_client = reqwest::ClientBuilder::new()
+    let _dd_http_client = reqwest::ClientBuilder::new()
         .pool_idle_timeout(Duration::from_millis(1))
         .build()
         .expect("Could not init datadog http_client");
 
     let tracer = opentelemetry_datadog::new_pipeline()
-        .with_http_client(dd_http_client)
         .with_service_name(service_name)
         .with_api_version(ApiVersion::Version05)
         .with_agent_endpoint(format!("http://{dd_host}:{dd_port}"))
