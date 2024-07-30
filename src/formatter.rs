@@ -23,6 +23,12 @@ use tracing_subscriber::registry::{LookupSpan, SpanRef};
 #[derive(Serialize)]
 struct DatadogId(u64);
 
+impl std::fmt::Display for DatadogId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
 struct TraceInfo {
     trace_id: DatadogId,
     span_id: DatadogId,
@@ -91,8 +97,8 @@ impl<S, N> FormatEvent<S, N> for DatadogFormatter
 
             if let Some(ref span_ref) = ctx.lookup_current() {
                 if let Some(trace_info) = lookup_trace_info(span_ref) {
-                    serializer.serialize_entry("dd.span_id", &trace_info.span_id)?;
-                    serializer.serialize_entry("dd.trace_id", &trace_info.trace_id)?;
+                    serializer.serialize_entry("dd.span_id", &trace_info.span_id.to_string())?;
+                    serializer.serialize_entry("dd.trace_id", &trace_info.trace_id.to_string())?;
                 }
             }
 
@@ -158,5 +164,16 @@ mod tests {
         let datadog_id: DatadogId = span_id.into();
 
         assert_eq!(datadog_id.0, 6359193864645272721);
+    }
+
+    #[test]
+    fn test_stringificiation() {
+        let span_id = SpanId::from_hex("58406520a0066491").unwrap();
+        let trace_id = TraceId::from_hex("2de7888d8f42abc9c7ba048b78f7a9fb").unwrap();
+        let datadog_span_id: DatadogId = span_id.into();
+        let datadog_trace_id: DatadogId = trace_id.into();
+
+        assert_eq!(datadog_span_id.to_string(), "6359193864645272721");
+        assert_eq!(datadog_trace_id.to_string(), "14391820556292303355");
     }
 }
